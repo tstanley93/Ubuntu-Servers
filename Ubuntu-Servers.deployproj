@@ -25,37 +25,14 @@
   <Import Condition=" Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets') " Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Deployment\1.1\DeploymentProject.targets" />
   <!-- vertag<:>end -->
   <ItemGroup>
-    <Folder Include="Tools\" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Deployment.targets">
       <Visible>False</Visible>
     </None>
-    <None Include="Scripts\admin_config.php" />
-    <None Include="Scripts\config.php" />
-    <None Include="Scripts\mysql_startup_script.sh" />
-    <None Include="Scripts\opencart-2.0.1.1.zip" />
-    <None Include="Scripts\startup_script.sh" />
-    <None Include="Templates\Ubuntu_LB_azuredeploy.json" />
-    <None Include="Templates\Ubuntu_LB_azuredeploy.parameters.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Tools\AzCopy.exe" />
-    <Content Include="Tools\Microsoft.Data.Edm.dll">
-      <Visible>False</Visible>
-    </Content>
-    <Content Include="Tools\Microsoft.Data.OData.dll">
-      <Visible>False</Visible>
-    </Content>
-    <Content Include="Tools\Microsoft.Data.Services.Client.dll">
-      <Visible>False</Visible>
-    </Content>
-    <Content Include="Tools\Microsoft.WindowsAzure.Storage.dll">
-      <Visible>False</Visible>
-    </Content>
-    <Content Include="Tools\Microsoft.WindowsAzure.Storage.DataMovement.dll">
-      <Visible>False</Visible>
-    </Content>
+    <None Include="mysql_startup_script.sh" />
+    <None Include="opencart-2.0.1.1.zip" />
+    <None Include="startup_script.sh" />
+    <None Include="Ubuntu_LB_azuredeploy.json" />
+    <None Include="Ubuntu_LB_azuredeploy.parameters.json" />
   </ItemGroup>
   <Target Name="GetReferenceAssemblyPaths" />
 </Project>
