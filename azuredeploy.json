@@ -416,11 +416,11 @@
       "dependsOn": [
         "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
         "[concat('Microsoft.Network/networkInterfaces/', parameters('nicNamePrefix'), copyindex())]",
-        "[concat('Microsoft.Compute/availabilitySets/', 'myAvSet')]"
+        "[concat('Microsoft.Compute/availabilitySets/', parameters('avSetName'))]"
       ],
       "properties": {
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets','myAvSet')]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('avSetName'))]"
         },
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
