@@ -30,6 +30,7 @@
     </None>
     <None Include="mysql_startup_script.sh" />
     <None Include="opencart-2.0.1.1.zip" />
+    <None Include="README.md" />
     <None Include="startup_script.sh" />
     <None Include="Ubuntu_LB_azuredeploy.json" />
     <None Include="Ubuntu_LB_azuredeploy.parameters.json" />
