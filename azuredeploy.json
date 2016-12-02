@@ -37,13 +37,6 @@
         "description": "The data center you want to install this WAF into."
       }
     },
-    "virtualNetworkResourceGroup": {
-      "type": "string",
-      "defaultValue": "Default-Networking",
-      "metadata": {
-        "description": "This is an already existing resource group, not a new one that contains an existing Virtual Network.  This allows you to use a single VNet so everything will talk to each other."
-      }
-    },
     "adminUsername": {
       "type": "string",
       "metadata": {
@@ -56,7 +49,7 @@
         "description": "Admin password used to login with."
       }
     },
-    "dnsNameforLBIP": {
+    "publicDNSName": {
       "type": "string",
       "metadata": {
         "description": "The unique DNS name not FQDN, that will be accessible via the Internet. "
@@ -90,11 +83,18 @@
         "description": "Network Interface Name Prefix"
       }
     },
-    "vnetName": {
+    "virtualNetworkName": {
       "type": "string",
       "defaultValue": "EIS-VNet",
       "metadata": {
         "description": "The existing Virtual Network name."
+      }
+    },
+    "vnetAddressPrefix": {
+      "type": "string",
+      "defaultValue": "10.10.0.0/16",
+      "metadata": {
+        "description": "Address space for the entire virtual network."
       }
     },
     "subnetName": {
@@ -102,6 +102,13 @@
       "defaultValue": "EIS-Server",
       "metadata": {
         "description": "The existing subnet name that you want to connect these VM's to."
+      }
+    },
+    "subnetPrefix": {
+      "type": "string",
+      "defaultValue": "10.10.1.0/24",
+      "metadata": {
+        "description": "Address space of the Subnet that the Web Applicatin Firewall will be created on."
       }
     },
     "imagePublisher": {
@@ -148,9 +155,9 @@
     }
   },
   "variables": {
-    "vnetID": "[resourceId(parameters('virtualNetworkResourceGroup'),'Microsoft.Network/virtualNetworks',parameters('vnetName'))]",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters ('subnetName'))]",
-    "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('dnsNameforLBIP'))]",
+    "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicDNSName'))]",
     "lbID": "[resourceId('Microsoft.Network/loadBalancers',parameters('lbName'))]",
     "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontend')]",
     "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/LoadBalancerBackend')]",
@@ -168,6 +175,30 @@
       }
     },
     {
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('virtualNetworkName')]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "VirtualNetwork"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetAddressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
       "type": "Microsoft.Compute/availabilitySets",
       "name": "[parameters('avSetName')]",
       "apiVersion": "2015-05-01-preview",
@@ -177,19 +208,19 @@
     {
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[parameters('dnsNameforLBIP')]",
+      "name": "[parameters('publicDNSName')]",
       "location": "[parameters('location')]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
-          "domainNameLabel": "[parameters('dnsNameforLBIP')]"
+          "domainNameLabel": "[parameters('publicDNSName')]"
         }
       }
     },
     {
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Network/networkSecurityGroups",
-      "name": "[concat(parameters('dnsNameforLBIP'), '-NSG')]",
+      "name": "[concat(parameters('publicDNSName'), '-NSG')]",
       "location": "[parameters('location')]",
       "properties": {
         "securityRules": [
@@ -249,11 +280,11 @@
       },
       "dependsOn": [
         "[concat('Microsoft.Network/loadBalancers/', parameters('lbName'))]",
-        "[concat('Microsoft.Network/networkSecurityGroups/', parameters('dnsNameforLBIP'),'-NSG')]"
+        "[concat('Microsoft.Network/networkSecurityGroups/', parameters('publicDNSName'),'-NSG')]"
       ],
       "properties": {
         "networkSecurityGroup": {
-          "id": "[resourceId('Microsoft.Network/networkSecurityGroups/', concat(parameters('dnsNameforLBIP'),'-NSG'))]"
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups/', concat(parameters('publicDNSName'),'-NSG'))]"
         },
         "ipConfigurations": [
           {
@@ -284,7 +315,7 @@
       "type": "Microsoft.Network/loadBalancers",
       "location": "[parameters('location')]",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', parameters('dnsNameforLBIP'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicDNSName'))]"
       ],
       "properties": {
         "frontendIPConfigurations": [
@@ -501,10 +532,10 @@
         "typeHandlerVersion": "1.2",
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/tstanley93/Azure/master/Servers/Ubuntu/Ubuntu-Servers/Ubuntu-Servers/Scripts/startup_script.sh",
-            "https://raw.githubusercontent.com/tstanley93/Azure/master/Servers/Ubuntu/Ubuntu-Servers/Ubuntu-Servers/Scripts/opencart-2.0.1.1.zip"
+            "https://raw.githubusercontent.com/tstanley93/Ubuntu-Servers/create-vnet/startup_script.sh",
+            "https://raw.githubusercontent.com/tstanley93/Ubuntu-Servers/create-vnet/opencart-2.0.1.1.zip"
           ],
-          "commandToExecute": "[concat('bash startup_script.sh ',parameters('vmNamePrefix'),sub(parameters('numberOfInstances'),1) ,' ',parameters('dnsNameforLBIP'),' ',sub(parameters('numberOfInstances'),1), ' ',parameters('vmNamePrefix'), ' ',parameters('adminUsername'), ' ',parameters('adminPassword'))]"
+          "commandToExecute": "[concat('bash startup_script.sh ',parameters('vmNamePrefix'),sub(parameters('numberOfInstances'),1) ,' ',parameters('publicDNSName'),' ',sub(parameters('numberOfInstances'),1), ' ',parameters('vmNamePrefix'), ' ',parameters('adminUsername'), ' ',parameters('adminPassword'))]"
         }
       }
     },
@@ -522,7 +553,7 @@
         "typeHandlerVersion": "1.2",
         "settings": {
           "fileUris": [
-            "https://raw.githubusercontent.com/tstanley93/Azure/master/Servers/Ubuntu/Ubuntu-Servers/Ubuntu-Servers/Scripts/mysql_startup_script.sh"
+            "https://raw.githubusercontent.com/tstanley93/Ubuntu-Servers/create-vnet/mysql_startup_script.sh"
           ],
           "commandToExecute": "[concat('bash mysql_startup_script.sh ',parameters('adminPassword'))]"
         }
