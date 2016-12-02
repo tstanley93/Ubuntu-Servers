@@ -1,42 +1,7 @@
 {
   "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
   "contentVersion": "1.0.0.0",
-  "parameters": {
-    "storageAccountName": {
-      "type": "string",
-      "metadata": {
-        "description": "New Storage Account Name"
-      }
-    },
-    "storageAccountType": {
-      "type": "string",
-      "defaultValue": "Standard_LRS",
-      "metadata": {
-        "description": "The type of the storage account."
-      }
-    },
-    "location": {
-      "type": "string",
-      "defaultValue": "West US",
-      "allowedValues": [
-        "Brazil South",
-        "Central US",
-        "East Aisa",
-        "East US",
-        "East US 2",
-        "Japan East",
-        "Japan West",
-        "North Central US",
-        "North Europe",
-        "South Central US",
-        "Southeast Aisa",
-        "West Europe",
-        "West US"
-      ],
-      "metadata": {
-        "description": "The data center you want to install this WAF into."
-      }
-    },
+  "parameters": {    
     "adminUsername": {
       "type": "string",
       "metadata": {
@@ -55,90 +20,6 @@
         "description": "The unique DNS name not FQDN, that will be accessible via the Internet. "
       }
     },
-    "vmNamePrefix": {
-      "type": "string",
-      "defaultValue": "myVM",
-      "metadata": {
-        "description": "Prefix used to create the Virtual Machine names."
-      }
-    },
-    "lbName": {
-      "type": "string",
-      "defaultValue": "myLB",
-      "metadata": {
-        "description": "Load Balancer name"
-      }
-    },
-    "avSetName": {
-      "type": "string",
-      "defaultValue": "myAVSet",
-      "metadata": {
-        "description": "Availability Set name"
-      }
-    },
-    "nicNamePrefix": {
-      "type": "string",
-      "defaultValue": "MyNIC",
-      "metadata": {
-        "description": "Network Interface Name Prefix"
-      }
-    },
-    "virtualNetworkName": {
-      "type": "string",
-      "defaultValue": "EIS-VNet",
-      "metadata": {
-        "description": "The existing Virtual Network name."
-      }
-    },
-    "vnetAddressPrefix": {
-      "type": "string",
-      "defaultValue": "10.10.0.0/16",
-      "metadata": {
-        "description": "Address space for the entire virtual network."
-      }
-    },
-    "subnetName": {
-      "type": "string",
-      "defaultValue": "EIS-Server",
-      "metadata": {
-        "description": "The existing subnet name that you want to connect these VM's to."
-      }
-    },
-    "subnetPrefix": {
-      "type": "string",
-      "defaultValue": "10.10.1.0/24",
-      "metadata": {
-        "description": "Address space of the Subnet that the Web Applicatin Firewall will be created on."
-      }
-    },
-    "imagePublisher": {
-      "type": "string",
-      "defaultValue": "Canonical",
-      "metadata": {
-        "description": "Image Publisher from the Market Place."
-      }
-    },
-    "imageOffer": {
-      "type": "string",
-      "defaultValue": "UbuntuServer",
-      "metadata": {
-        "description": "Image Offer, can be found via powershell or CLI."
-      }
-    },
-    "imageSKU": {
-      "type": "string",
-      "defaultValue": "14.04.2-LTS",
-      "metadata": {
-        "description": "Image SKU, can be found via powershell or CLI."
-      }
-    },
-    "numberOfInstances": {
-      "type": "int",
-      "defaultValue": 3,
-      "metadata": {
-        "description": "The total number of servers to be deployed.  Numerically, the last server will be the MySQL server."
-      }
-    },
     "vmSize": {
       "type": "string",
       "defaultValue": "Standard_A1",
@@ -155,10 +36,22 @@
     }
   },
   "variables": {
-    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
-    "subnetRef": "[concat(variables('vnetID'),'/subnets/',parameters ('subnetName'))]",
+    "newStorageAccountName": "[concat(parameters('publicDNSName'),'store')]",
+    "imagePublisher" : "Canonical",
+    "imageOffer": "UbuntuServer",
+    "imageSKU": "14.04.2-LTS",
+    "virtualNetworkName": "[concat(parameters('publicDNSName'),'-vnet')]",
+    "vnetAddressPrefix" : "10.0.0.0/16",
+    "subnetName" : "[concat(parameters('publicDNSName'),'-subnet')]",
+    "subnetPrefix" : "10.0.0.1/24",
+    "avSetName" : "[concat(parameters('publicDNSName'), '-avset')]",
+    "nicNamePrefix" : "[concat(parameters('publicDNSName'), '-nic')]",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables ('subnetName'))]",
     "publicIPAddressID": "[resourceId('Microsoft.Network/publicIPAddresses',parameters('publicDNSName'))]",
-    "lbID": "[resourceId('Microsoft.Network/loadBalancers',parameters('lbName'))]",
+    "lbName" : "[concat(parameters('publicDNSName'),'-alb')]",
+    "lbID": "[resourceId('Microsoft.Network/loadBalancers',variables('lbName'))]",
+    "vmNamePrefix" : "[concat(parameters('publicDNSName'),'vm')]",
     "frontEndIPConfigID": "[concat(variables('lbID'),'/frontendIPConfigurations/loadBalancerFrontend')]",
     "lbPoolID": "[concat(variables('lbID'),'/backendAddressPools/LoadBalancerBackend')]",
     "lbProbeID": "[concat(variables('lbID'),'/probes/tcpProbe')]",
@@ -167,32 +60,32 @@
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[parameters('storageAccountName')]",
+      "name": "[variables('newStorageAccountName')]",
       "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "properties": {
-        "accountType": "[parameters('storageAccountType')]"
+        "accountType": "Premium_LRS"
       }
     },
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/virtualNetworks",
-      "name": "[parameters('virtualNetworkName')]",
-      "location": "[parameters('location')]",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
       "tags": {
         "displayName": "VirtualNetwork"
       },
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[parameters('vnetAddressPrefix')]"
+            "[variables('vnetAddressPrefix')]"
           ]
         },
         "subnets": [
           {
-            "name": "[parameters('subnetName')]",
+            "name": "[variables('subnetName')]",
             "properties": {
-              "addressPrefix": "[parameters('subnetPrefix')]"
+              "addressPrefix": "[variables('subnetPrefix')]"
             }
           }
         ]
@@ -200,16 +93,16 @@
     },
     {
       "type": "Microsoft.Compute/availabilitySets",
-      "name": "[parameters('avSetName')]",
+      "name": "[variables('avSetName')]",
       "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "properties": { }
     },
     {
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[parameters('publicDNSName')]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
@@ -221,7 +114,7 @@
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Network/networkSecurityGroups",
       "name": "[concat(parameters('publicDNSName'), '-NSG')]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "securityRules": [
           {
@@ -272,14 +165,14 @@
     {
       "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('nicNamePrefix'), copyindex())]",
-      "location": "[parameters('location')]",
+      "name": "[concat(variables('nicNamePrefix'), copyindex())]",
+      "location": "[resourceGroup().location]",
       "copy": {
         "name": "nicLoop",
-        "count": "[parameters('numberOfInstances')]"
+        "count": 3
       },
       "dependsOn": [
-        "[concat('Microsoft.Network/loadBalancers/', parameters('lbName'))]",
+        "[concat('Microsoft.Network/loadBalancers/', variables('lbName'))]",
         "[concat('Microsoft.Network/networkSecurityGroups/', parameters('publicDNSName'),'-NSG')]"
       ],
       "properties": {
@@ -311,9 +204,9 @@
     },
     {
       "apiVersion": "2015-05-01-preview",
-      "name": "[parameters('lbName')]",
+      "name": "[variables('lbName')]",
       "type": "Microsoft.Network/loadBalancers",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicDNSName'))]"
       ],
@@ -366,30 +259,6 @@
               },
               "protocol": "Tcp",
               "frontendPort": 8024,
-              "backendPort": 22,
-              "enableFloatingIP": false
-            }
-          },
-          {
-            "name": "SSH-VM3",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[variables('frontEndIPConfigID')]"
-              },
-              "protocol": "Tcp",
-              "frontendPort": 8025,
-              "backendPort": 22,
-              "enableFloatingIP": false
-            }
-          },
-          {
-            "name": "SSH-VM4",
-            "properties": {
-              "frontendIPConfiguration": {
-                "id": "[variables('frontEndIPConfigID')]"
-              },
-              "protocol": "Tcp",
-              "frontendPort": 8026,
               "backendPort": 22,
               "enableFloatingIP": false
             }
@@ -460,40 +329,40 @@
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat(parameters('vmNamePrefix'), copyindex())]",
+      "name": "[concat(variables('vmNamePrefix'), copyindex())]",
       "copy": {
         "name": "virtualMachineLoop",
-        "count": "[parameters('numberOfInstances')]"
+        "count": 3
       },
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountName'))]",
-        "[concat('Microsoft.Network/networkInterfaces/', parameters('nicNamePrefix'), copyindex())]",
-        "[concat('Microsoft.Compute/availabilitySets/', parameters('avSetName'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', variables('newStorageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicNamePrefix'), copyindex())]",
+        "[concat('Microsoft.Compute/availabilitySets/', variables('avSetName'))]"
       ],
       "properties": {
         "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('avSetName'))]"
+          "id": "[resourceId('Microsoft.Compute/availabilitySets',variables('avSetName'))]"
         },
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[concat(parameters('vmNamePrefix'), copyIndex())]",
+          "computerName": "[concat(variables('vmNamePrefix'), copyIndex())]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
-            "publisher": "[parameters('imagePublisher')]",
-            "offer": "[parameters('imageOffer')]",
-            "sku": "[parameters('imageSKU')]",
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('imageSKU')]",
             "version": "latest"
           },
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/','osdisk', copyindex(), '.vhd')]"
+              "uri": "[concat('http://',variables('newStorageAccountName'),'.blob.core.windows.net/vhds/','osdisk', copyindex(), '.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
@@ -502,14 +371,14 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('nicNamePrefix'),copyindex()))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('nicNamePrefix'),copyindex()))]"
             }
           ]
         },
         "diagnosticsProfile": {
           "bootDiagnostics": {
             "enabled": true,
-            "storageUri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net')]"
+            "storageUri": "[concat('http://',variables('newStorageAccountName'),'.blob.core.windows.net')]"
           }
         }
       }
@@ -518,13 +387,13 @@
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "copy": {
         "name": "extensionLoop",
-        "count": "[sub(parameters('numberOfInstances'), 1)]"
+        "count": 2
       },
-      "name": "[concat(parameters('vmNamePrefix'), copyindex(),'/startup_script')]",
+      "name": "[concat(variables('vmNamePrefix'), copyindex(),'/startup_script')]",
       "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmNamePrefix'),copyindex())]"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmNamePrefix'),copyindex())]"
       ],
       "properties": {
         "publisher": "Microsoft.OSTCExtensions",
@@ -535,17 +404,17 @@
             "https://raw.githubusercontent.com/tstanley93/Ubuntu-Servers/create-vnet/startup_script.sh",
             "https://raw.githubusercontent.com/tstanley93/Ubuntu-Servers/create-vnet/opencart-2.0.1.1.zip"
           ],
-          "commandToExecute": "[concat('bash startup_script.sh ',parameters('vmNamePrefix'),sub(parameters('numberOfInstances'),1) ,' ',parameters('publicDNSName'),' ',sub(parameters('numberOfInstances'),1), ' ',parameters('vmNamePrefix'), ' ',parameters('adminUsername'), ' ',parameters('adminPassword'))]"
+          "commandToExecute": "[concat('bash startup_script.sh ',variables('vmNamePrefix'),sub(3,1) ,' ',parameters('publicDNSName'),' ',sub(3,1), ' ',variables('vmNamePrefix'), ' ',parameters('adminUsername'), ' ',parameters('adminPassword'))]"
         }
       }
     },
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('vmNamePrefix'), sub(parameters('numberOfInstances'),1),'/mysql_startup_script')]",
+      "name": "[concat(variables('vmNamePrefix'), sub(3,1),'/mysql_startup_script')]",
       "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmNamePrefix'),sub(parameters('numberOfInstances'),1))]"
+        "[concat('Microsoft.Compute/virtualMachines/', variables('vmNamePrefix'),sub(3,1))]"
       ],
       "properties": {
         "publisher": "Microsoft.OSTCExtensions",
@@ -559,5 +428,15 @@
         }
       }
     }
-  ]
+  ],
+  "outputs": {
+    "GUI-URL": {
+      "type": "string",
+      "value": "[concat('https://',reference(variables('publicIPAddressID')).dnsSettings.fqdn,':8443')]"
+    },
+    "SSH-URL": {
+      "type": "string",
+      "value": "[concat(reference(variables('publicIPAddressID')).dnsSettings.fqdn, ' 8022')]"
+    }
+  }
 }
