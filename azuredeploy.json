@@ -202,7 +202,7 @@
               "sourcePortRange": "*",
               "destinationAddressPrefix": "*",
               "destinationPortRange": "443",
-              "protocol": "TCP",
+              "protocol": "Tcp",
               "direction": "Inbound",
               "access": "Allow"
             }
@@ -216,7 +216,7 @@
               "sourcePortRange": "*",
               "destinationAddressPrefix": "*",
               "destinationPortRange": "80",
-              "protocol": "TCP",
+              "protocol": "Tcp",
               "direction": "Inbound",
               "access": "Allow"
             }
@@ -230,7 +230,7 @@
               "sourcePortRange": "*",
               "destinationAddressPrefix": "*",
               "destinationPortRange": "22",
-              "protocol": "TCP",
+              "protocol": "Tcp",
               "direction": "Inbound",
               "access": "Allow"
             }
@@ -309,7 +309,7 @@
               "frontendIPConfiguration": {
                 "id": "[variables('frontEndIPConfigID')]"
               },
-              "protocol": "tcp",
+              "protocol": "Tcp",
               "frontendPort": 8022,
               "backendPort": 22,
               "enableFloatingIP": false
@@ -321,7 +321,7 @@
               "frontendIPConfiguration": {
                 "id": "[variables('frontEndIPConfigID')]"
               },
-              "protocol": "tcp",
+              "protocol": "Tcp",
               "frontendPort": 8023,
               "backendPort": 22,
               "enableFloatingIP": false
@@ -333,7 +333,7 @@
               "frontendIPConfiguration": {
                 "id": "[variables('frontEndIPConfigID')]"
               },
-              "protocol": "tcp",
+              "protocol": "Tcp",
               "frontendPort": 8024,
               "backendPort": 22,
               "enableFloatingIP": false
@@ -345,7 +345,7 @@
               "frontendIPConfiguration": {
                 "id": "[variables('frontEndIPConfigID')]"
               },
-              "protocol": "tcp",
+              "protocol": "Tcp",
               "frontendPort": 8025,
               "backendPort": 22,
               "enableFloatingIP": false
@@ -357,7 +357,7 @@
               "frontendIPConfiguration": {
                 "id": "[variables('frontEndIPConfigID')]"
               },
-              "protocol": "tcp",
+              "protocol": "Tcp",
               "frontendPort": 8026,
               "backendPort": 22,
               "enableFloatingIP": false
@@ -374,7 +374,7 @@
               "backendAddressPool": {
                 "id": "[variables('lbPoolID')]"
               },
-              "protocol": "tcp",
+              "protocol": "Tcp",
               "frontendPort": 80,
               "backendPort": 80,
               "enableFloatingIP": false,
@@ -393,7 +393,7 @@
               "backendAddressPool": {
                 "id": "[variables('lbPoolID')]"
               },
-              "protocol": "tcp",
+              "protocol": "Tcp",
               "frontendPort": 443,
               "backendPort": 443,
               "enableFloatingIP": false,
@@ -408,7 +408,7 @@
           {
             "name": "tcpProbe",
             "properties": {
-              "protocol": "tcp",
+              "protocol": "Tcp",
               "port": 80,
               "intervalInSeconds": 5,
               "numberOfProbes": 2
@@ -417,7 +417,7 @@
           {
             "name": "tcpProbe443",
             "properties": {
-              "protocol": "tcp",
+              "protocol": "Tcp",
               "port": 443,
               "intervalInSeconds": 5,
               "numberOfProbes": 2
