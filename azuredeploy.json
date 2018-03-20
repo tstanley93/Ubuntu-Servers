@@ -21,14 +21,11 @@
       }
     },
     "vmSize": {
-      "type": "string",
-      "defaultValue": "Standard_A1",
+      "type": "string",      
       "allowedValues": [
-        "Standard_A0",
-        "Standard_A1",
-        "Standard_A2",
-        "Standard_A3",
-        "Standard_A4"
+        "Standard_D2S_V3",
+        "Standard_D2S_V3",
+        "Standard_D2S_V3"
       ],
       "metadata": {
         "description": "Virtual Machine instance size."
