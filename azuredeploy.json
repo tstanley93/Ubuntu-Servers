@@ -387,7 +387,7 @@
         "count": 2
       },
       "name": "[concat(variables('vmNamePrefix'), copyindex(),'/startup_script')]",
-      "apiVersion": "2017-12-01",
+      "apiVersion": "2017-03-30",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('vmNamePrefix'),copyindex())]"
@@ -408,7 +408,7 @@
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(variables('vmNamePrefix'), sub(3,1),'/mysql_startup_script')]",
-      "apiVersion": "2017-12-01",
+      "apiVersion": "2017-03-30",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('vmNamePrefix'),sub(3,1))]"
