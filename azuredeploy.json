@@ -387,15 +387,15 @@
         "count": 2
       },
       "name": "[concat(variables('vmNamePrefix'), copyindex(),'/startup_script')]",
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2017-12-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('vmNamePrefix'),copyindex())]"
       ],
       "properties": {
-        "publisher": "Microsoft.OSTCExtensions",
-        "type": "CustomScriptForLinux",
-        "typeHandlerVersion": "1.2",
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
         "settings": {
           "fileUris": [
             "https://raw.githubusercontent.com/tstanley93/Ubuntu-Servers/create-vnet/startup_script.sh",
@@ -408,15 +408,15 @@
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(variables('vmNamePrefix'), sub(3,1),'/mysql_startup_script')]",
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "2017-12-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Compute/virtualMachines/', variables('vmNamePrefix'),sub(3,1))]"
       ],
       "properties": {
-        "publisher": "Microsoft.OSTCExtensions",
-        "type": "CustomScriptForLinux",
-        "typeHandlerVersion": "1.2",
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "typeHandlerVersion": "2.0",
         "settings": {
           "fileUris": [
             "https://raw.githubusercontent.com/tstanley93/Ubuntu-Servers/create-vnet/mysql_startup_script.sh"
